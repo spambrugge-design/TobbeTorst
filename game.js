@@ -1,9 +1,17 @@
 // 1. GRUNDLÄGGANDE INSTÄLLNINGAR
 // ===============================
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d'); // "Context" är ytan vi ritar på
+const ctx = canvas.getContext('2d');
 
-// Hämta UI-element från HTML
+// --- NYTT: Logik för skalning ---
+const BASE_WIDTH = 800;
+const BASE_HEIGHT = 600;
+
+// Sätt canvasens interna upplösning
+canvas.width = BASE_WIDTH;
+canvas.height = BASE_HEIGHT;
+
+// Hämta UI-element
 const scoreElement = document.getElementById('score');
 const livesElement = document.getElementById('lives');
 const gameOverScreen = document.getElementById('gameOverScreen');
@@ -13,54 +21,42 @@ const finalScoreElement = document.getElementById('finalScore');
 let score = 0;
 let lives = 3;
 let isGameOver = false;
-const barPositions = [80, 205, 330, 455];
+// Positionerna kommer nu att beräknas dynamiskt
+const baseBarPositions = [80, 205, 330, 455];
+let barPositions = [...baseBarPositions]; // Skapa en kopia att jobba med
 
-// *** ÄNDRAD: Ladda in tre bilder ***
-const playerImage = new Image();
-playerImage.src = 'otto.png';
-
-// *** NYTT: Ladda in den andra bilden för spelaren ***
-const playerImage2 = new Image();
-playerImage2.src = 'otto2.png'; 
-
-const beerImage = new Image();
-beerImage.src = 'ol.png';
+// Ladda bilder (samma som förut)
+const playerImage = new Image(); playerImage.src = 'otto.png';
+const playerImage2 = new Image(); playerImage2.src = 'otto2.png'; 
+const beerImage = new Image(); beerImage.src = 'ol.png';
 
 let imagesLoaded = 0;
 function onImageLoad() {
     imagesLoaded++;
-    // *** ÄNDRAD: Starta spelet när TRE bilder är laddade ***
     if (imagesLoaded === 3) {
         restartGame();
     }
 }
-playerImage.onload = onImageLoad;
-playerImage2.onload = onImageLoad; // *** NYTT ***
-beerImage.onload = onImageLoad;
+playerImage.onload = onImageLoad; playerImage2.onload = onImageLoad; beerImage.onload = onImageLoad;
 
 
-// 2. SPELOBJEKT (SPELARE OCH ÖL)
+// 2. SPELOBJEKT
 // ===============================
-
-// Spelaren ("Otto")
 const player = {
     x: 30,
     y: barPositions[0],
     width: 60,
     height: 90,
     currentLane: 0,
-    // *** NYTT: Egenskaper för drick-animationen ***
     isDrinking: false,
     drinkingTimer: 0,
-    drinkingDuration: 15, // Animationen varar i 15 frames (ca 0.25 sekunder)
+    drinkingDuration: 15,
     
-    // *** ÄNDRAD: draw-funktionen väljer nu bild baserat på isDrinking ***
     draw: function() {
         let imageToDraw = this.isDrinking ? playerImage2 : playerImage;
         ctx.drawImage(imageToDraw, this.x, this.y - this.height / 2, this.width, this.height);
     },
     
-    // Funktioner för att flytta spelaren
     moveUp: function() {
         if (this.currentLane > 0) {
             this.currentLane--;
@@ -75,8 +71,8 @@ const player = {
     }
 };
 
-// ... (resten av sektion 2 och 3 är oförändrad) ...
 let beers = [];
+let baseBeerSpeed = 3;
 let beerSpeed = 3;
 let beerSpawnRate = 120;
 let frameCount = 0;
@@ -91,35 +87,64 @@ function spawnBeer() {
     });
 }
 
+// 3. KONTROLLER (Tangentbord OCH Touch)
+// ============================
+
+// Behåll tangentbord för datorer
 document.addEventListener('keydown', function(event) {
-    if (isGameOver) {
-        if (event.code === 'Space') {
-            restartGame();
-        }
+    if (isGameOver && event.code === 'Space') {
+        restartGame();
         return;
     }
-    if (event.key === 'ArrowUp' || event.key === 'w') {
-        player.moveUp();
-    } else if (event.key === 'ArrowDown' || event.key === 's') {
-        player.moveDown();
+    if (!isGameOver) {
+        if (event.key === 'ArrowUp' || event.key === 'w') player.moveUp();
+        else if (event.key === 'ArrowDown' || event.key === 's') player.moveDown();
     }
 });
-// ... (sektion 4 är oförändrad) ...
+
+// --- NYTT: Lyssna efter Touch-händelser ---
+function handleTouch(event) {
+    // Förhindra att sidan zoomar eller scrollar
+    event.preventDefault(); 
+    
+    if (isGameOver) {
+        restartGame();
+        return;
+    }
+
+    const touchY = event.touches[0].clientY;
+    const canvasRect = canvas.getBoundingClientRect(); // Få canvas position på skärmen
+    const canvasMiddle = canvasRect.top + canvasRect.height / 2;
+
+    if (touchY < canvasMiddle) {
+        player.moveUp();
+    } else {
+        player.moveDown();
+    }
+}
+
+// Koppla funktionen till både canvas och game over-skärmen
+canvas.addEventListener('touchstart', handleTouch);
+gameOverScreen.addEventListener('touchstart', handleTouch);
+
+
+// 4. FUNKTIONER
+// ============================
 function restartGame() {
     score = 0;
     lives = 3;
-    beerSpeed = 3;
+    beerSpeed = baseBeerSpeed;
     beerSpawnRate = 120;
     beers = [];
     isGameOver = false;
     player.currentLane = 0;
     player.y = barPositions[0];
-    player.isDrinking = false; // Återställ animationen
+    player.isDrinking = false;
     frameCount = 0;
     
     updateUI();
     gameOverScreen.classList.add('hidden');
-    cancelAnimationFrame(animationFrameId); 
+    if(animationFrameId) cancelAnimationFrame(animationFrameId); 
     gameLoop();
 }
 
@@ -131,65 +156,48 @@ function updateUI() {
 function drawBars() {
     ctx.fillStyle = '#8b4513';
     for (const y of barPositions) {
+        // Justera tjockleken på bardisken baserat på originalstorleken
         ctx.fillRect(0, y + 20, canvas.width, 10);
     }
 }
-// 5. SPELLOOPEN (HJÄRTAT I SPELET)
+
+// 5. SPELLOOPEN
 // ==================================
 let animationFrameId;
 
 function gameLoop() {
     if (isGameOver) return;
 
-    // A. Rensa skärmen
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // B. Rita ut bakgrund och statiska element
     drawBars();
 
-    // C. Uppdatera och rita spelobjekt
-    
-    // *** NYTT: Hantera drick-animationens timer ***
     if (player.isDrinking) {
         player.drinkingTimer--;
         if (player.drinkingTimer <= 0) {
-            player.isDrinking = false; // Avsluta animationen när timern är slut
+            player.isDrinking = false;
         }
     }
-    
-    // Spelaren
     player.draw();
 
-    // Ölen
     frameCount++;
-    if (frameCount % beerSpawnRate === 0) {
+    if (frameCount % Math.floor(beerSpawnRate) === 0) {
         spawnBeer();
         beerSpeed += 0.1;
-        if (beerSpawnRate > 40) {
-            beerSpawnRate -= 2;
-        }
+        if (beerSpawnRate > 40) beerSpawnRate -= 2;
     }
 
-    // Loopa igenom alla öl baklänges
     for (let i = beers.length - 1; i >= 0; i--) {
         let beer = beers[i];
-        
         beer.x -= beerSpeed;
-        
         ctx.drawImage(beerImage, beer.x, beer.y - beer.height / 2, beer.width, beer.height);
         
-        // D. Kollisionsdetektering
         if (beer.x < player.x + player.width &&
             beer.x + beer.width > player.x &&
             Math.abs(beer.y - player.y) < 10) {
-            
             score += 10;
             beers.splice(i, 1);
-            
-            // *** NYTT: Starta drick-animationen vid kollision ***
             player.isDrinking = true;
             player.drinkingTimer = player.drinkingDuration;
-
         } else if (beer.x + beer.width < 0) {
             lives--;
             beers.splice(i, 1);
@@ -202,12 +210,9 @@ function gameLoop() {
         }
     }
     
-    // E. Uppdatera UI
     updateUI();
-
-    // F. Anropa nästa frame i loopen
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// Startar först när bilderna är laddade...
+// Starta spelet
 updateUI();

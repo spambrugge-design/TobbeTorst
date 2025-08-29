@@ -2,14 +2,14 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Törstiga Tobbe</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Törstiga Tobbe</h1>
     <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
         <div id="ui-container">
             <div id="stats">
                 <span>Poäng: <span id="score">0</span></span>
@@ -19,7 +19,7 @@
         <div id="gameOverScreen" class="hidden">
             <h2>GAME OVER</h2>
             <p>Din poäng: <span id="finalScore">0</span></p>
-            <p>Tryck på MELLANSLAG för att spela igen</p>
+            <p>Tryck på skärmen för att spela igen</p>
         </div>
     </div>
 

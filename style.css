@@ -1,3 +1,9 @@
+/* Hindrar "studs" vid scroll på mobilen */
+html, body {
+    overflow: hidden;
+    height: 100%;
+}
+
 body {
     background-color: #1a1a1a;
     color: #ffffff;
@@ -7,23 +13,32 @@ body {
     align-items: center;
     justify-content: center;
     margin: 0;
-    padding-top: 20px;
+    padding: 10px;
+    box-sizing: border-box; /* Ser till att padding inte förstör layouten */
 }
 
 h1 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    font-size: 5vmin; /* Anpassar textstorleken efter skärmen */
 }
 
+/* ÄNDRAD: Gör spel-containern flexibel */
 #game-container {
-    position: relative; /* Viktigt för att kunna positionera UI-element över canvas */
-    width: 800px;
-    height: 600px;
+    position: relative;
+    width: 100%; /* Tar upp hela bredden som är tillgänglig */
+    max-width: 800px; /* Men inte mer än 800px på stora skärmar */
+    aspect-ratio: 4 / 3; /* Behåller 4:3-formatet! */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 canvas {
     background-color: #000000;
     border: 2px solid #555;
-    display: block;
+    /* ÄNDRAD: Fyller ut den flexibla föräldern */
+    width: 100%;
+    height: 100%;
 }
 
 #ui-container, #gameOverScreen {
@@ -35,14 +50,14 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    pointer-events: none; /* Gör så att man kan klicka "igenom" elementet */
+    pointer-events: none;
 }
 
 #stats {
     width: 95%;
     display: flex;
     justify-content: space-between;
-    font-size: 24px;
+    font-size: 3.5vmin; /* Anpassar textstorleken */
     padding: 15px;
     font-weight: bold;
 }
@@ -52,17 +67,17 @@ canvas {
     color: white;
     justify-content: center;
     text-align: center;
-    pointer-events: auto; /* Gör den klickbar igen */
+    pointer-events: auto;
 }
 
 #gameOverScreen h2 {
-    font-size: 74px;
+    font-size: 12vmin; /* Anpassar textstorleken */
     color: #d92c2c;
     margin: 0;
 }
 
 #gameOverScreen p {
-    font-size: 24px;
+    font-size: 4vmin; /* Anpassar textstorleken */
     margin-top: 20px;
 }
 
