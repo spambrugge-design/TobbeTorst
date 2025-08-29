@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Törstiga Tobbe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Törstiga Tobbe</h1>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-container">
+            <div id="stats">
+                <span>Poäng: <span id="score">0</span></span>
+                <span>Liv: <span id="lives">3</span></span>
+            </div>
+        </div>
+        <div id="gameOverScreen" class="hidden">
+            <h2>GAME OVER</h2>
+            <p>Din poäng: <span id="finalScore">0</span></p>
+            <p>Tryck på MELLANSLAG för att spela igen</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
